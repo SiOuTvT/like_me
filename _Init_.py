@@ -220,17 +220,15 @@ async def tool_get_status(_ctx: AgentCtx, user_id: str = "") -> dict:
     }
 
 
-# ==================== 初始化 ====================
-@plugin.mount_init_method
-async def on_init():
-    logger.info("=" * 50)
-    logger.info("like_me v4.0.0 已加载")
-    logger.info(f"NapCat: {config.NAPCAT_HOST}:{config.NAPCAT_PORT}")
-    logger.info(f"点赞策略: 每次{config.LIKE_TIMES_PER_CALL}次")
-    logger.info(f"每日限制: {config.MAX_DAILY_USERS}人")
-    logger.info("=" * 50)
+# ==================== 初始化日志 ====================
+logger.info("=" * 50)
+logger.info("like_me v4.0.0 已加载")
+logger.info(f"NapCat: {config.NAPCAT_HOST}:{config.NAPCAT_PORT}")
+logger.info(f"点赞策略: 每次{config.LIKE_TIMES_PER_CALL}次")
+logger.info(f"每日限制: {config.MAX_DAILY_USERS}人")
+logger.info("=" * 50)
 
 
-@plugin.mount_cleanup_method
+@plugin.mount_cleanup_method()
 async def on_cleanup():
     logger.info("like_me 已卸载")
