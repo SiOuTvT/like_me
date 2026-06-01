@@ -15,7 +15,6 @@ import httpx
 from nekro_agent.core import logger
 from nekro_agent.api.plugin import NekroPlugin, SandboxMethodType
 from nekro_agent.api.schemas import AgentCtx
-from nekro_agent.api import recurring_timer
 
 
 # ==================== 插件实例 ====================
@@ -354,79 +353,16 @@ async def tool_unsubscribe(_ctx: AgentCtx, user_id: str = "") -> dict:
     }
 
 
-# ==================== 定时任务 ====================
-_job_id = None
-
-async def auto_like_job():
-    if not config.ENABLE_AUTO_LIKE:
-        return
-
-    logger.info("开始执行每日自动点赞")
-
-    subscribers = data.get_subscribed_users()
-    if not subscribers:
-        logger.info("没有订阅用户")
-        return
-
-    success_count = 0
-    fail_count = 0
-
-    for user_id in subscribers:
-        try:
-            remaining = data.get_remaining_users(user_id)
-            if remaining <= 0:
-                logger.warning(f"用户 {user_id} 今日名额已用完")
-                continue
-
-            total_likes, msg = await perform_like(user_id, user_id)
-
-            if total_likes > 0:
-                success_count += 1
-            else:
-                fail_count += 1
-                logger.warning(f"自动点赞失败 {user_id}: {msg}")
-
-        except Exception as e:
-            fail_count += 1
-            logger.error(f"自动点赞异常 {user_id}: {e}")
-
-    logger.info(f"自动点赞完成: 成功{success_count}, 失败{fail_count}")
-
-
-# ==================== 生命周期 ====================
 @plugin.mount_init_method()
 async def on_init():
-    global _job_id
-
     logger.info("=" * 50)
     logger.info("like_me v4.0.0 已加载")
     logger.info(f"NapCat: {config.NAPCAT_HOST}:{config.NAPCAT_PORT}")
     logger.info(f"点赞策略: 每次{config.LIKE_TIMES_PER_CALL}次")
     logger.info(f"每日限制: {config.MAX_DAILY_USERS}人")
-    logger.info(f"自动点赞: {config.AUTO_LIKE_TIME} ({'启用' if config.ENABLE_AUTO_LIKE else '禁用'})")
     logger.info("=" * 50)
-
-    if config.ENABLE_AUTO_LIKE:
-        try:
-            hour, minute = map(int, config.AUTO_LIKE_TIME.split(":"))
-            cron = f"{minute} {hour} * * *"
-            _job_id = recurring_timer.create_cron_job(
-                name="like_me_auto",
-                cron_expression=cron,
-                callback=auto_like_job,
-                description="like_me 每日自动点赞"
-            )
-            logger.info(f"定时任务已注册: {cron} (id={_job_id})")
-        except Exception as e:
-            logger.error(f"定时任务注册失败: {e}")
 
 
 @plugin.mount_cleanup_method()
 async def on_cleanup():
-    global _job_id
-    if _job_id:
-        try:
-            recurring_timer.delete_job(_job_id)
-        except:
-            pass
     logger.info("like_me 已卸载")
