@@ -319,7 +319,7 @@ async def do_unsubscribe(ctx: CommandExecutionContext):
         return
 
     data.unsubscribe(user_id)
-    await ctx.reply("✅ 已取消订阅每日自动点赞")
+    await ctx.reply("已取消订阅每日自动点赞")
 
 
 async def do_status(ctx: CommandExecutionContext):
@@ -328,19 +328,19 @@ async def do_status(ctx: CommandExecutionContext):
     remaining = data.get_remaining_users(user_id)
     is_sub = data.is_subscribed(user_id)
 
-    vip_tag = "👑 VIP用户" if user_data.get("is_vip") else "普通用户"
+    vip_tag = "VIP用户" if user_data.get("is_vip") else "普通用户"
     liked_count = len(user_data["daily_users"])
 
     await ctx.reply(
-        f"📊 点赞状态\n"
+        f"点赞状态\n"
         f"━━━━━━━━━━━━━━\n"
-        f"👤 用户: {data.get_user_name(user_id)}\n"
-        f"🎯 类型: {vip_tag}\n"
-        f"📅 今日已赞: {liked_count}/{config.MAX_DAILY_USERS}人\n"
-        f"⏳ 剩余名额: {remaining}人\n"
-        f"💯 累计点赞: {user_data['total_likes']}次\n"
-        f"🔔 自动: {'✅ 已订阅' if is_sub else '❌ 未订阅'}\n"
-        f"⏰ 时间: {config.AUTO_LIKE_TIME}"
+        f"用户: {data.get_user_name(user_id)}\n"
+        f"类型: {vip_tag}\n"
+        f"今日已赞: {liked_count}/{config.MAX_DAILY_USERS}人\n"
+        f"剩余名额: {remaining}人\n"
+        f"累计点赞: {user_data['total_likes']}次\n"
+        f"自动: {'已订阅' if is_sub else '未订阅'}\n"
+        f"时间: {config.AUTO_LIKE_TIME}"
     )
 
 
@@ -665,7 +665,7 @@ async def auto_like_job():
                         from nekro_agent.api.message import send_text
                         user_name = data.get_user_name(user_id)
                         await send_text(
-                            f"✅ 每日自动点赞已完成！\n"
+                            f"每日自动点赞已完成\n"
                             f"本次: {total_likes}次",
                             target_id=user_id,
                             target_type="private"
