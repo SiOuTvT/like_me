@@ -13,7 +13,7 @@ from datetime import date
 import httpx
 
 from nekro_agent.core import logger
-from nekro_agent.api.plugin import NekroPlugin, SandboxMethodType, CommandPermission, CommandExecutionContext
+from nekro_agent.api.plugin import NekroPlugin, SandboxMethodType, CommandExecutionContext
 from nekro_agent.api.schemas import AgentCtx
 from nekro_agent.api import recurring_timer
 
@@ -221,7 +221,6 @@ async def perform_like(target_id: str, requester_id: str) -> tuple[int, str]:
 @plugin.mount_command(
     name="like_me",
     description="QQ点赞功能",
-    permission=CommandPermission.MEMBER,
     usage="/like_me [点赞|订阅|取消订阅|状态]"
 )
 async def cmd_like_me(context: CommandExecutionContext):
