@@ -10,11 +10,10 @@ QQ点赞规则：
 """
 import json
 from datetime import date
-from typing import Annotated
 import httpx
 
 from nekro_agent.core import logger
-from nekro_agent.api.plugin import NekroPlugin, SandboxMethodType, Arg, CommandPermission, CommandExecutionContext
+from nekro_agent.api.plugin import NekroPlugin, SandboxMethodType, CommandPermission, CommandExecutionContext
 from nekro_agent.api.schemas import AgentCtx
 from nekro_agent.api import recurring_timer
 
@@ -225,13 +224,11 @@ async def perform_like(target_id: str, requester_id: str) -> tuple[int, str]:
     permission=CommandPermission.MEMBER,
     usage="/like_me [点赞|订阅|取消订阅|状态]"
 )
-async def cmd_like_me(
-    context: CommandExecutionContext,
-    action: Annotated[str, Arg(description="操作类型：点赞/订阅/取消订阅/状态")] = "点赞"
-):
+async def cmd_like_me(context: CommandExecutionContext):
+    args = context.args.strip() if context.args else "点赞"
     user_id = context.db_user.user_id if context.db_user else context.chat_key
 
-    if action in ["点赞", "赞我"]:
+    if args in ["点赞", "赞我"]:
         remaining = data.get_remaining_users(user_id)
         if remaining <= 0:
             return f"今日已给{config.MAX_DAILY_USERS}人点赞\n达到腾讯官方限制，请明天再试~"
@@ -254,7 +251,7 @@ async def cmd_like_me(
         else:
             return msg
 
-    elif action in ["订阅", "订阅点赞"]:
+    elif args in ["订阅", "订阅点赞"]:
         user_name = context.db_user.nickname if context.db_user else "未知用户"
 
         if data.is_subscribed(user_id):
@@ -269,14 +266,14 @@ async def cmd_like_me(
             f"查看状态: /like_me 状态"
         )
 
-    elif action in ["取消订阅", "退订"]:
+    elif args in ["取消订阅", "退订"]:
         if not data.is_subscribed(user_id):
             return "你还没有订阅每日自动点赞~"
 
         data.unsubscribe(user_id)
         return "已取消订阅每日自动点赞"
 
-    elif action in ["状态", "我的点赞"]:
+    elif args in ["状态", "我的点赞"]:
         user_data = data.get_user_data(user_id)
         remaining = data.get_remaining_users(user_id)
         is_sub = data.is_subscribed(user_id)
