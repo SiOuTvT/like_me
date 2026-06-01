@@ -695,7 +695,7 @@ async def on_init():
     logger.info("=" * 50)
     logger.info("like_me v3.2.0 已加载")
     logger.info(f"NapCat: {config.NAPCAT_HOST}:{config.NAPCAT_PORT}")
-    logger.info(f"点赞策略: 每次{config.LIKE_TIMES_PER_CALL}次")
+    logger.info(f"点赞策略: 每次{config.LIKE_TIMES_PER_CALL}次, 最多{config.MAX_CALLS_PER_USER}次调用")
     logger.info(f"每日限制: {config.MAX_DAILY_USERS}人")
     logger.info(f"自动点赞: {config.AUTO_LIKE_TIME} ({'启用' if config.ENABLE_AUTO_LIKE else '禁用'})")
     logger.info("=" * 50)
