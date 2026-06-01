@@ -13,7 +13,7 @@ from datetime import date
 import httpx
 
 from nekro_agent.core import logger
-from nekro_agent.api.plugin import NekroPlugin, SandboxMethodType, CommandExecutionContext
+from nekro_agent.api.plugin import NekroPlugin, SandboxMethodType
 from nekro_agent.api.schemas import AgentCtx
 from nekro_agent.api import recurring_timer
 
@@ -215,96 +215,6 @@ async def perform_like(target_id: str, requester_id: str) -> tuple[int, str]:
         return actual, f"成功点赞{actual}次"
     else:
         return 0, msg
-
-
-# ==================== 命令处理 ====================
-@plugin.mount_command(
-    name="like_me",
-    description="QQ点赞功能",
-    usage="/like_me [点赞|订阅|取消订阅|状态]"
-)
-async def cmd_like_me(context: CommandExecutionContext):
-    args = context.args.strip() if context.args else "点赞"
-    user_id = context.db_user.user_id if context.db_user else context.chat_key
-
-    if args in ["点赞", "赞我"]:
-        remaining = data.get_remaining_users(user_id)
-        if remaining <= 0:
-            return f"今日已给{config.MAX_DAILY_USERS}人点赞\n达到腾讯官方限制，请明天再试~"
-
-        total_likes, msg = await perform_like(user_id, user_id)
-
-        if total_likes > 0:
-            user_data = data.get_user_data(user_id)
-            remaining_after = data.get_remaining_users(user_id)
-            vip_tag = "[VIP]" if user_data.get("is_vip") else "普通"
-
-            return (
-                f"{msg}\n"
-                f"━━━━━━━━━━━━━━\n"
-                f"用户类型: {vip_tag}\n"
-                f"今日已赞: {len(user_data['daily_users'])}/{config.MAX_DAILY_USERS}人\n"
-                f"剩余名额: {remaining_after}人\n"
-                f"累计点赞: {user_data['total_likes']}次"
-            )
-        else:
-            return msg
-
-    elif args in ["订阅", "订阅点赞"]:
-        user_name = context.db_user.nickname if context.db_user else "未知用户"
-
-        if data.is_subscribed(user_id):
-            return "你已经订阅了每日自动点赞功能~"
-
-        data.subscribe(user_id, user_name)
-        return (
-            f"订阅成功\n"
-            f"━━━━━━━━━━━━━━\n"
-            f"每天 {config.AUTO_LIKE_TIME} 自动为你点赞\n"
-            f"取消订阅: /like_me 取消订阅\n"
-            f"查看状态: /like_me 状态"
-        )
-
-    elif args in ["取消订阅", "退订"]:
-        if not data.is_subscribed(user_id):
-            return "你还没有订阅每日自动点赞~"
-
-        data.unsubscribe(user_id)
-        return "已取消订阅每日自动点赞"
-
-    elif args in ["状态", "我的点赞"]:
-        user_data = data.get_user_data(user_id)
-        remaining = data.get_remaining_users(user_id)
-        is_sub = data.is_subscribed(user_id)
-
-        vip_tag = "VIP用户" if user_data.get("is_vip") else "普通用户"
-        liked_count = len(user_data["daily_users"])
-
-        return (
-            f"点赞状态\n"
-            f"━━━━━━━━━━━━━━\n"
-            f"用户: {data.get_user_name(user_id)}\n"
-            f"类型: {vip_tag}\n"
-            f"今日已赞: {liked_count}/{config.MAX_DAILY_USERS}人\n"
-            f"剩余名额: {remaining}人\n"
-            f"累计点赞: {user_data['total_likes']}次\n"
-            f"自动: {'已订阅' if is_sub else '未订阅'}\n"
-            f"时间: {config.AUTO_LIKE_TIME}"
-        )
-
-    else:
-        return (
-            "未知命令\n\n"
-            "可用命令:\n"
-            "  /like_me 点赞      - 立即点赞\n"
-            "  /like_me 订阅      - 订阅自动点赞\n"
-            "  /like_me 取消订阅  - 取消订阅\n"
-            "  /like_me 状态      - 查看状态\n\n"
-            "快捷方式:\n"
-            "  赞我              - 立即点赞\n"
-            "  订阅点赞          - 订阅\n"
-            "  我的点赞          - 查看状态"
-        )
 
 
 # ==================== AI 工具 ====================
