@@ -14,7 +14,7 @@ from typing import Annotated
 import httpx
 
 from nekro_agent.core import logger
-from nekro_agent.api.plugin import NekroPlugin, SandboxMethodType, CmdCtl, Arg, CommandPermission, CommandExecutionContext
+from nekro_agent.api.plugin import NekroPlugin, SandboxMethodType, Arg, CommandPermission, CommandExecutionContext
 from nekro_agent.api.schemas import AgentCtx
 from nekro_agent.api import recurring_timer
 
@@ -234,8 +234,7 @@ async def cmd_like_me(
     if action in ["点赞", "赞我"]:
         remaining = data.get_remaining_users(user_id)
         if remaining <= 0:
-            yield CmdCtl.success(f"今日已给{config.MAX_DAILY_USERS}人点赞\n达到腾讯官方限制，请明天再试~")
-            return
+            return f"今日已给{config.MAX_DAILY_USERS}人点赞\n达到腾讯官方限制，请明天再试~"
 
         total_likes, msg = await perform_like(user_id, user_id)
 
@@ -244,7 +243,7 @@ async def cmd_like_me(
             remaining_after = data.get_remaining_users(user_id)
             vip_tag = "[VIP]" if user_data.get("is_vip") else "普通"
 
-            yield CmdCtl.success(
+            return (
                 f"{msg}\n"
                 f"━━━━━━━━━━━━━━\n"
                 f"用户类型: {vip_tag}\n"
@@ -253,17 +252,16 @@ async def cmd_like_me(
                 f"累计点赞: {user_data['total_likes']}次"
             )
         else:
-            yield CmdCtl.success(msg)
+            return msg
 
     elif action in ["订阅", "订阅点赞"]:
         user_name = context.db_user.nickname if context.db_user else "未知用户"
 
         if data.is_subscribed(user_id):
-            yield CmdCtl.success("你已经订阅了每日自动点赞功能~")
-            return
+            return "你已经订阅了每日自动点赞功能~"
 
         data.subscribe(user_id, user_name)
-        yield CmdCtl.success(
+        return (
             f"订阅成功\n"
             f"━━━━━━━━━━━━━━\n"
             f"每天 {config.AUTO_LIKE_TIME} 自动为你点赞\n"
@@ -273,11 +271,10 @@ async def cmd_like_me(
 
     elif action in ["取消订阅", "退订"]:
         if not data.is_subscribed(user_id):
-            yield CmdCtl.success("你还没有订阅每日自动点赞~")
-            return
+            return "你还没有订阅每日自动点赞~"
 
         data.unsubscribe(user_id)
-        yield CmdCtl.success("已取消订阅每日自动点赞")
+        return "已取消订阅每日自动点赞"
 
     elif action in ["状态", "我的点赞"]:
         user_data = data.get_user_data(user_id)
@@ -287,7 +284,7 @@ async def cmd_like_me(
         vip_tag = "VIP用户" if user_data.get("is_vip") else "普通用户"
         liked_count = len(user_data["daily_users"])
 
-        yield CmdCtl.success(
+        return (
             f"点赞状态\n"
             f"━━━━━━━━━━━━━━\n"
             f"用户: {data.get_user_name(user_id)}\n"
@@ -300,7 +297,7 @@ async def cmd_like_me(
         )
 
     else:
-        yield CmdCtl.success(
+        return (
             "未知命令\n\n"
             "可用命令:\n"
             "  /like_me 点赞      - 立即点赞\n"
