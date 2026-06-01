@@ -23,7 +23,8 @@ plugin = NekroPlugin(
     module_name="like_me",
     description="QQ名片点赞插件",
     author="Lingma",
-    version="4.0.0"
+    version="4.0.0",
+    url=""
 )
 
 
